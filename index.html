@@ -261,7 +261,7 @@ function newGame(){
     base:{hp:250,maxHp:250},level:1,xp:0,xpNeed:4,kills:0,pendingLv:1,
     weapons:{cannon:1},passives:{},evolved:{},cds:{},
     enemies:[],shells:[],fx:[],parts:[],orbs:[],mines:[],tornados:[],beams:[],strikes:[],texts:[],later:[],
-    boss:null,cards:null,shake:0,banner:null,msg:''};
+    boss:null,cards:null,shake:0,kickX:0,kickY:0,hurtFlash:0,hitstop:0,banner:null,msg:''};
   newWind();showBanner('웨이브 1','적이 오른쪽에서 몰려옵니다 · 바람 '+windText());
 }
 function newWind(){const m=2+Math.min(G.wave,12)*0.35;G.wind=Math.round(rand(-m,m));}
@@ -309,6 +309,14 @@ function kill(e){
   const n=e.boss?8:1;for(let i=0;i<n;i++)G.orbs.push({x:e.x+rand(-20,20),y:e.y+rand(-20,20),v:e.xp/n,t:0});
   G.fx.push({x:e.x,y:e.y,r:e.sz*1.5,t:0,life:0.3,kind:'pop'});
   if(e.boss){G.boss=null;G.shake=10;sfx('quake',0.6);if(G.wave>=20){G.state='win';}else showBanner('보스 격파!','다음 웨이브 준비');}
+}
+function tankDirectHit(s){
+  const sp=Math.hypot(s.vx,s.vy)||1;
+  G.shake=Math.max(G.shake,s.big?18:14);G.kickX=s.vx/sp*16;G.kickY=Math.abs(s.vy/sp)*10;
+  G.hurtFlash=0.6;G.hitstop=0.07;G.tank.recoil=9;
+  addText(G.tank.x,gy(G.tank.x)-62,'피격!','#F09595');
+  sfx('quake',0.4,0.15);
+  try{if(navigator.vibrate)navigator.vibrate(s.big?[90,40,90]:120);}catch(e){}
 }
 function hurtTank(a){
   const T=G.tank;if(T.hp<=0)return;T.hp-=a*(1-0.05*P('armor'));
@@ -365,7 +373,7 @@ function updShells(dt){
       if(s.owner==='p'){
         for(const e of G.enemies){if(e.hp>0&&dist(s.x,s.y,e.x,e.y)<e.sz+4){explodeShell(s,true);dead=true;break;}}
       }else{
-        if(T.hp>0&&dist(s.x,s.y,T.x,gy(T.x)-12)<22){explodeShell(s,true);dead=true;}
+        if(T.hp>0&&dist(s.x,s.y,T.x,gy(T.x)-12)<22){tankDirectHit(s);explodeShell(s,true);dead=true;}
         else if(s.x<BASE_R&&s.y>gy(40)-110){explodeShell(s,true);dead=true;}
       }
     }
@@ -491,6 +499,8 @@ function updMisc(dt){
 
 function update(dt){
   if(G.state!=='play')return;
+  G.hurtFlash=Math.max(0,G.hurtFlash-dt*1.6);G.kickX*=Math.pow(0.0005,dt);G.kickY*=Math.pow(0.0005,dt);
+  if(G.hitstop>0){G.hitstop-=dt;G.shake=Math.max(0,G.shake-dt*10);return;}
   G.t+=dt;
   for(let i=G.later.length-1;i>=0;i--){const l=G.later[i];l.t-=dt;if(l.t<=0){G.later.splice(i,1);l.fn();}}
   if(!G.boss){
@@ -505,7 +515,7 @@ function update(dt){
   G.enemies=G.enemies.filter(e=>e.hp>0);
   G.base.hp=Math.min(G.base.maxHp,G.base.hp+P('repair')*dt);
   if(G.restore>0){G.restore-=dt;const k=Math.min(1,dt*5);for(let x=0;x<W;x++)terrain[x]+=(origTerrain[x]-terrain[x])*k;if(G.restore<=0){terrain.set(origTerrain);dug.fill(0);}tDirty=true;}
-  if(G.shake>0)G.shake=Math.max(0,G.shake-dt*24);
+  if(G.shake>0)G.shake=Math.max(0,G.shake-dt*(G.shake>8?30:24));
   if(G.state==='play'&&G.pendingLv>0)openCards();
 }
 
@@ -832,9 +842,10 @@ function drawEnd(win){
 }
 function draw(){
   if(!G){drawTitle();return;}
-  ctx.save();if(G.shake>0)ctx.translate(rand(-G.shake,G.shake),rand(-G.shake,G.shake));
+  ctx.save();if(G.shake>0||G.kickX||G.kickY){const s=G.shake;ctx.translate(W/2+rand(-s,s)+G.kickX,H/2+rand(-s,s)+G.kickY);ctx.rotate(rand(-1,1)*s*0.0012);ctx.translate(-W/2,-H/2);}
   drawBg();drawTerrain();drawBase();drawEnemies();drawTank();drawPreview();drawShells();drawMisc();
   ctx.restore();
+  if(G.hurtFlash>0){const a=Math.min(0.55,G.hurtFlash),vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.95);vg.addColorStop(0,'rgba(226,40,40,0)');vg.addColorStop(1,'rgba(226,40,40,'+a+')');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);}
   drawHud();if(touchMode&&G.state==='play')drawTouch();if(G.banner&&G.state!=='levelup')drawBanner();
   if(G.state==='levelup')drawCards();
   if(G.state==='paused'){shade();otxt('일시정지',W/2,H/2-20,44,'#fff','center');txt(touchMode?'터치해서 계속':'P 키를 눌러 계속',W/2,H/2+30,18,'#ddd','center',400);}
