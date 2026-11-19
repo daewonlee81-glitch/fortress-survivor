@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>포트리스 서바이버 — 프로토타입 v0.4</title>
+<title>포트리스 서바이버 — 프로토타입 v0.5</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#151a1f">
 <meta name="mobile-web-app-capable" content="yes">
@@ -157,6 +157,7 @@ function buildSprites(){
   mk('s1',22,26,g=>{g.beginPath();g.moveTo(11,1);g.quadraticCurveTo(22,12,18,20);g.quadraticCurveTo(11,28,4,20);g.quadraticCurveTo(0,12,11,1);Pf(g,'#ff6a2a',1.8);g.beginPath();g.moveTo(11,10);g.quadraticCurveTo(16,16,13,21);g.quadraticCurveTo(11,23,9,21);g.quadraticCurveTo(6,16,11,10);g.fillStyle='#ffd23f';g.fill();});
   mk('w1',24,26,g=>{g.beginPath();g.moveTo(12,1);g.lineTo(22,5);g.quadraticCurveTo(22,18,12,25);g.quadraticCurveTo(2,18,2,5);g.closePath();Pf(g,'#5b8fd8');g.beginPath();g.moveTo(12,5);g.lineTo(18,7.5);g.quadraticCurveTo(18,16,12,21);g.closePath();g.fillStyle='rgba(255,255,255,0.35)';g.fill();});
   mk('s2',26,26,g=>{circ(g,13,13,9);g.lineWidth=2.6;g.strokeStyle='#ff5a5a';g.stroke();g.beginPath();g.moveTo(13,1);g.lineTo(13,8);g.moveTo(13,18);g.lineTo(13,25);g.moveTo(1,13);g.lineTo(8,13);g.moveTo(18,13);g.lineTo(25,13);g.stroke();circ(g,13,13,2);g.fillStyle='#ff5a5a';g.fill();});
+  mk('i_auto',28,28,g=>{circ(g,14,14,11);Pf(g,'#1d2b4a',2);g.strokeStyle='#ff5a5a';g.lineWidth=2.4;circ(g,14,14,7);g.stroke();g.beginPath();g.moveTo(14,1);g.lineTo(14,7);g.moveTo(14,21);g.lineTo(14,27);g.moveTo(1,14);g.lineTo(7,14);g.moveTo(21,14);g.lineTo(27,14);g.stroke();pth(g,[16,6,9,15,13.5,15,11.5,22,19,12,14.5,12]);Pf(g,'#ffd23f',1.4);});
   mk('w11',26,26,g=>{g.save();g.translate(13,13);g.rotate(-0.8);rrp(g,-3,-2,6,15,3);Pf(g,'#b8bcc6',1.8);g.beginPath();g.arc(0,-6,6.5,0,Math.PI*2);Pf(g,'#b8bcc6',1.8);rrp(g,-2,-13,4,7,1);g.fillStyle='#1b222c';g.fill();g.restore();});
 }
 const SKY=[{top:'#4fa9e6',bot:'#d6eef8',far:'#94bcd2',mid:'#7fa996',sun:'#fff6c8',sunX:0.8,sunY:110},
@@ -246,29 +247,43 @@ const ET={
 };
 const WD={cannon:{name:'주포'},rocket:{name:'3연발 로켓',cd:2.6},homing:{name:'유도탄',cd:1.9},laser:{name:'레이저',cd:3.2},sat:{name:'위성 포격',cd:4.6},mine:{name:'지뢰 매설',cd:2.8},tornado:{name:'회오리탄',cd:6}};
 const WDESC={cannon:'피해 +10, 재장전 단축',rocket:'가장 가까운 적에게 로켓을 부채꼴로 발사',homing:'적을 끝까지 쫓아가는 유도 미사일',laser:'바람을 무시하고 일직선으로 관통',sat:'적 머리 위로 위성 레이저 낙하',mine:'전방 지면에 지뢰를 깔아둠',tornado:'적을 뒤로 밀어내는 회오리'};
-const PD={double:'더블파이어',reload:'재장전',radius:'폭발 범위',power:'파워업',armor:'장갑',collect:'고철 수집기',sight:'조준선',repair:'기지 수리'};
-const PDESC={double:'주포 2연발 확률 +15%',reload:'모든 재장전 -8%',radius:'폭발 범위 +12%',power:'모든 피해 +10%',armor:'최대 체력 +20, 받는 피해 -5%',collect:'경험치 획득 +15%',sight:'조준선이 더 길게 표시됨',repair:'기지가 초당 1씩 회복'};
+const PD={auto:'자동 발사',double:'더블파이어',reload:'재장전',radius:'폭발 범위',power:'파워업',armor:'장갑',collect:'고철 수집기',sight:'조준선',repair:'기지 수리'};
+const PDESC={auto:'주포가 가장 가까운 적을 스스로 조준해 쏨. 레벨이 오를수록 정확',double:'주포 2연발 확률 +15%',reload:'모든 재장전 -8%',radius:'폭발 범위 +12%',power:'모든 피해 +10%',armor:'최대 체력 +20, 받는 피해 -5%',collect:'경험치 획득 +15%',sight:'조준선이 더 길게 표시됨',repair:'기지가 초당 1씩 회복'};
 const EVO={cannon:{need:'radius',name:'연쇄 폭발포',desc:'착탄 지점에서 4단 연쇄 폭발'},rocket:{need:'reload',name:'융단 폭격',desc:'로켓 9발 일제 발사'},homing:{need:'collect',name:'군집 미사일',desc:'유도탄 3배 발사'},sat:{need:'power',name:'일제 사격',desc:'위성 포격 6지점 동시 타격'}};
 
 const P=k=>G.passives[k]||0,WL=k=>G.weapons[k]||0;
 const dmgMul=()=>1+0.1*P('power'),radMul=()=>1+0.12*P('radius'),cdMul=()=>1-0.08*P('reload');
 function cannonStats(){const l=WL('cannon');return{dmg:(45+10*(l-1))*dmgMul(),r:46*radMul(),reload:(1.0-0.08*(l-1))*cdMul()};}
 
-function newGame(){
-  initAudio();genTerrain();
+function newGame(opt){
+  opt=opt||{};initAudio();genTerrain();
   G={state:'play',t:0,wave:1,waveT:0,waveLen:30,wind:0,spawnT:1.5,
     tank:{x:190,angle:45,power:0,charging:false,hp:100,maxHp:100,reload:0,lastPower:-1,moving:false},
     base:{hp:250,maxHp:250},level:1,xp:0,xpNeed:4,kills:0,pendingLv:1,
     weapons:{cannon:1},passives:{},evolved:{},cds:{},
     enemies:[],shells:[],fx:[],parts:[],orbs:[],mines:[],tornados:[],beams:[],strikes:[],texts:[],later:[],
     boss:null,cards:null,shake:0,kickX:0,kickY:0,hurtFlash:0,hitstop:0,banner:null,msg:''};
-  newWind();showBanner('웨이브 1','적이 오른쪽에서 몰려옵니다 · 바람 '+windText());
+  G.rebirths=opt.rebirths||0;G.best=opt.best||0;
+  if(opt.keep){const k=opt.keep;if(WD[k]){G.weapons[k]=1;}else if(PD[k]){G.passives[k]=1;if(k==='armor'){G.tank.maxHp+=20;G.tank.hp+=20;}}}
+  newWind();
+  if(G.rebirths)showBanner('환생 '+G.rebirths+'회차',(opt.keep?(WD[opt.keep]?WD[opt.keep].name:PD[opt.keep])+' Lv1 계승 · ':'')+'바람 '+windText());
+  else showBanner('웨이브 1','적이 오른쪽에서 몰려옵니다 · 바람 '+windText());
 }
 function newWind(){const m=2+Math.min(G.wave,12)*0.35;G.wind=Math.round(rand(-m,m));}
 function windText(){return G.wind===0?'없음':(G.wind<0?'← ':'→ ')+Math.abs(G.wind);}
 function showBanner(a,b){G.banner={a,b,t:2.4};}
 function addText(x,y,s,col){G.texts.push({x,y,s:String(s),col,t:0});if(G.texts.length>70)G.texts.shift();}
-function gameOver(msg){if(G.state==='over'||G.state==='win')return;G.state='over';G.msg=msg;}
+function gameOver(msg){
+  if(G.state==='over'||G.state==='win'||G.state==='rebirth')return;
+  G.state='rebirth';G.msg=msg;G.tank.charging=false;G.best=Math.max(G.best||0,G.wave);
+  const ch=[];for(const k in G.weapons)if(k!=='cannon')ch.push(k);for(const k in G.passives)ch.push(k);
+  G.rbChoices=ch;G.rbT=0;sfx('quake',0.5,0.3);
+}
+function rebirth(i){
+  if(!G||G.state!=='rebirth')return;
+  const ch=G.rbChoices||[];if(ch.length&&(i===undefined||!ch[i]))return;
+  sfx('levelup',0.5,0.2);newGame({keep:ch.length?ch[i]:null,rebirths:(G.rebirths||0)+1,best:G.best});
+}
 
 function slopeAt(x,s){return Math.atan2(gy(x+s)-gy(x-s),2*s);}
 function aimRad(){const T=G.tank;return T.angle*Math.PI/180-(T.tilt||0);}
@@ -473,7 +488,34 @@ function updTank(dt){
   if(keys.TouchD&&now-keys.TouchD>280)T.angle=clamp(T.angle-28*dt,0,88);
   if(T.reload>0)T.reload=Math.max(0,T.reload-dt*(T.moving?0.5:1));
   if(T.charging)T.power=Math.min(1,T.power+dt/1.4);
+  if(P('auto')>0){G.autoT=(G.autoT||0)-dt;if(T.reload<=0&&!T.charging&&G.autoT<=0)autoFire();}
   T.recoil=Math.max(0,(T.recoil||0)-dt*30);T.flash=Math.max(0,(T.flash||0)-dt);
+}
+function simShot(power,tgt){
+  const m=muzzle(),v=260+power*760,ax=G.wind*12,h=1/90,T=G.tank;
+  const stopped=tgt.x-tgt.sz<BASE_R||((tgt.arty||tgt.boss)&&tgt.x<=tgt.stopX)||(!tgt.fly&&tgt.x>T.x&&tgt.x-tgt.sz<T.x+24);
+  const lead=stopped?0:tgt.spd*(tgt.fly?1:0.8);
+  let x=m.x,y=m.y,vx=Math.cos(m.a)*v,vy=-Math.sin(m.a)*v,best=1e9;
+  for(let t=0;t<6;t+=h){
+    vx+=ax*h;vy+=GRAV*h;x+=vx*h;y+=vy*h;
+    const tx=tgt.x-lead*t,ty=tgt.y;
+    const d=Math.hypot(x-tx,y-ty);if(d<best)best=d;
+    if(y>=gy(x)){const gx=tgt.fly?best:Math.abs(x-tx);return Math.min(best,gx);}
+    if(x>W+80||x<-60||y>H)return best;
+  }
+  return best;
+}
+function autoFire(){
+  const T=G.tank;let tgt=null;
+  for(const e of G.enemies){if(e.hp<=0||e.x>W-20||e.x<T.x+80)continue;if(!tgt||(!e.fly&&tgt.fly)||(e.fly===tgt.fly&&e.x<tgt.x))tgt=e;}
+  if(!tgt){G.autoT=0.25;return;}
+  let bp=-1,bd=1e9;
+  for(let p=0.02;p<=1.0001;p+=0.03){const d=simShot(p,tgt);if(d<bd){bd=d;bp=p;}}
+  for(let p=Math.max(0,bp-0.03);p<=Math.min(1,bp+0.03);p+=0.006){const d=simShot(p,tgt);if(d<bd){bd=d;bp=p;}}
+  if(bd>tgt.sz+60){G.autoT=0.4;return;}
+  const err=(0.09-0.018*(P('auto')-1))*(Math.random()*2-1);
+  fireCannon(clamp(bp*(1+err),0,1));G.autoT=0.15;
+  addText(T.x,gy(T.x)-70,'AUTO','#9FE1CB');
 }
 function updOrbs(dt){
   const T=G.tank,tx=T.x,ty=gy(T.x)-20;
@@ -568,7 +610,7 @@ function stage(){return G?Math.min(3,Math.floor((G.wave-1)/5)):0;}
 const ESPR={grunt:['chr_crossbow',30],runner:['chr_carrottank',26],flyer:['chr_secwind',36],heavy:['chr_minelander',48],arty:['chr_multimissle',40],shield:['chr_puketank',34]};
 const BOSSES=['chr_missile','chr_ionattacker','chr_lasertank','chr_catapult'];
 const ESPR_O={grunt:['e_grunt',36,2],runner:['e_runner',32,2],flyer:['e_flyer',36,2],heavy:['e_heavy',48,2],arty:['e_arty',44,2],shield:['e_shield',40,2]};
-const ICON={cannon:'w3',rocket:'w7',homing:'w6',laser:'w8',sat:'s10',mine:'w9',tornado:'w12',double:'s8',reload:'s9',radius:'s3',power:'s1',armor:'w1',collect:'coin',sight:'s2',repair:'w11'};
+const ICON={auto:'i_auto',cannon:'w3',rocket:'w7',homing:'w6',laser:'w8',sat:'s10',mine:'w9',tornado:'w12',double:'s8',reload:'s9',radius:'s3',power:'s1',armor:'w1',collect:'coin',sight:'s2',repair:'w11'};
 const SSPR={cannon:['w3',22,0],rocket:['w4',24,1],homing:['w6',22,1],eshell:['s3',22,0]};
 const PAL=[{grass:'#5f9a34',hi:'#9bd463',tint:null},{grass:'#6f8a34',hi:'#b9c76a',tint:'rgba(120,90,60,0.16)'},{grass:'#8f7a2e',hi:'#e2c066',tint:'rgba(160,80,40,0.18)'},{grass:'#5a2a1e',hi:'#ff7a33',tint:'rgba(40,15,25,0.38)'}];
 
@@ -834,11 +876,34 @@ function drawTitle(){
   const hasM=spr('mascot',W-250,H-230,300,false,0)||spr('hero',W-260,H-235,230,false,0);
   const cx=hasM?470:W/2,al=hasM?'center':'center';
   otxt('포트리스 서바이버',cx,160,58,'#fff',al);
-  txt('프로토타입 v0.4 — 오른쪽에서 몰려오는 적을 포격으로 막아내세요',cx,222,17,'#ddd',al,400);
+  txt('프로토타입 v0.5 — 오른쪽에서 몰려오는 적을 포격으로 막아내세요',cx,222,17,'#ddd',al,400);
   const L=touchMode?[['◀ ▶','왼쪽 아래 버튼: 이동 (이동 중 재장전 느림)'],['▲ ▼','오른쪽 버튼: 각도 (톡 1°, 길게 누르면 연속)'],['발사','누르고 있으면 파워 충전, 떼면 발사'],['카드','레벨업 때 원하는 카드를 터치'],['II','오른쪽 위 버튼: 일시정지']]:[['← →','이동 (이동 중에는 재장전이 느려짐)'],['↑ ↓','각도 조절 (Shift: 정밀 조절)'],['Space','누르고 있으면 파워 충전, 떼면 발사 (마우스 클릭도 가능)'],['1 2 3','레벨업 카드 선택'],['P / M','일시정지 / 소리 켜고 끄기']];
   L.forEach((l,i)=>{txt(l[0],cx-200,296+i*36,17,'#FAC775','right');txt(l[1],cx-176,296+i*36,16,'#eee','left',400);});
   txt('바람을 읽고 각도와 파워를 맞추세요. 포격으로 구덩이를 파면 적이 느려집니다.',cx,500,15,'#9FE1CB',al,400);
   otxt(touchMode?'화면을 터치해서 시작':'Enter 또는 클릭으로 시작',cx,566,22,'#fff',al);
+}
+function rbRects(){
+  const ch=G.rbChoices||[],n=ch.length,cols=Math.min(4,Math.max(1,n)),w=232,h=96,gx=18,gy0=18,rows=Math.ceil(n/cols);
+  const x0=(W-(cols*w+(cols-1)*gx))/2,y0=300+Math.max(0,(3-rows))*20;
+  return ch.map((k,i)=>({x:x0+(i%cols)*(w+gx),y:y0+Math.floor(i/cols)*(h+gy0),w,h,k}));
+}
+function drawRebirth(){
+  G.rbT=(G.rbT||0)+1/60;
+  shade();ctx.fillStyle='rgba(60,10,20,0.35)';ctx.fillRect(0,0,W,H);
+  otxt('기지 방어 실패 — 환생',W/2,120,42,'#F09595','center');
+  txt(G.msg+' · 웨이브 '+G.wave+' · 처치 '+G.kills+' · 레벨 '+G.level+(G.rebirths?' · 환생 '+G.rebirths+'회':'')+' · 최고 웨이브 '+G.best,W/2,166,15,'#ddd','center',400);
+  const ch=G.rbChoices||[];
+  if(!ch.length){otxt('계승할 능력이 없습니다',W/2,300,22,'#fff','center');otxt(touchMode?'터치해서 환생':'Enter 또는 클릭으로 환생',W/2,350,18,'#FAC775','center');return;}
+  otxt('능력 하나를 골라 Lv1로 가지고 환생합니다',W/2,224,22,'#FAC775','center');
+  txt(touchMode?'계승할 능력을 터치하세요':'클릭하거나 숫자 키 1~'+Math.min(9,ch.length),W/2,256,14,'#bbb','center',400);
+  rbRects().forEach((r,i)=>{
+    const k=r.k,isW=!!WD[k],lv=isW?G.weapons[k]:G.passives[k],col=isW?'#378ADD':'#639922',name=isW?(G.evolved[k]?'★ '+EVO[k].name:WD[k].name):PD[k];
+    ctx.fillStyle='#1f262d';rr(r.x,r.y,r.w,r.h,12);ctx.fill();ctx.strokeStyle=col;ctx.lineWidth=2;rr(r.x,r.y,r.w,r.h,12);ctx.stroke();
+    sprFit(ICON[k],r.x+36,r.y+r.h/2,40);
+    otxt(name,r.x+68,r.y+34,17,'#fff','left');
+    txt('Lv'+lv+' → Lv1 계승',r.x+68,r.y+62,13,col==='#378ADD'?'#85B7EB':'#C0DD97','left',400);
+    if(i<9)txt(String(i+1),r.x+r.w-16,r.y+16,13,'#777','center');
+  });
 }
 function drawEnd(win){
   shade();otxt(win?'기지 방어 성공!':'작전 실패',W/2,220,52,win?'#9FE1CB':'#F09595','center');
@@ -858,6 +923,7 @@ function draw(){
   if(G.state==='levelup')drawCards();
   if(G.state==='paused'){shade();otxt('일시정지',W/2,H/2-20,44,'#fff','center');txt(touchMode?'터치해서 계속':'P 키를 눌러 계속',W/2,H/2+30,18,'#ddd','center',400);}
   if(G.state==='over')drawEnd(false);
+  if(G.state==='rebirth')drawRebirth();
   if(G.state==='win')drawEnd(true);
 }
 
@@ -866,6 +932,7 @@ addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
   keys[e.code]=true;
   if(e.code==='KeyM'){muted=!muted;initAudio();}
+  if(G&&G.state==='rebirth'){const m=/^(?:Digit|Numpad)([1-9])$/.exec(e.code);if(m)rebirth(+m[1]-1);else if(e.code==='Enter'&&!(G.rbChoices||[]).length)rebirth();return;}
   if(!G||G.state==='over'||G.state==='win'){if(e.code==='Enter'||e.code==='KeyR'||(!G&&e.code==='Space'&&!e.repeat))newGame();return;}
   if(G.state==='play'){if(e.code==='Space'&&!e.repeat)startCharge();if(e.code==='KeyP'||e.code==='Escape'){G.state='paused';G.tank.charging=false;}}
   else if(G.state==='paused'){if(e.code==='KeyP'||e.code==='Escape')G.state='play';}
@@ -900,6 +967,7 @@ cv.addEventListener('pointerdown',e=>{
   if(e.pointerType==='touch'||e.pointerType==='pen')touchMode=true;
   e.preventDefault();cv.focus();try{cv.setPointerCapture(e.pointerId);}catch(_){}
   const p=canvasPos(e);
+  if(G&&G.state==='rebirth'){if(!(G.rbChoices||[]).length){rebirth();return;}rbRects().forEach((r,i)=>{if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)rebirth(i);});return;}
   if(!G||G.state==='over'||G.state==='win'){tryFullscreen();newGame();return;}
   if(G.state==='levelup'){cardRects().forEach((r,i)=>{if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)chooseCard(i);});return;}
   if(G.state==='paused'){G.state='play';return;}
